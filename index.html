@@ -1,0 +1,1166 @@
+<!doctype html>
+<html lang="th" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คลังคำศัพท์นักเขียน</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&amp;family=Noto+Serif+Thai:wght@400;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+  :root {
+    --bg-deep: #0f172a;
+    --bg-card: #1e293b;
+    --text-main: #e2e8f0;
+    --accent-gold: #f59e0b;
+    --accent-teal: #14b8a6;
+  }
+  html, body { height: 100%; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg-deep); color: var(--text-main); }
+  .serif-font { font-family: 'Noto Serif Thai', serif; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+  ::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.3); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.5); }
+
+  .tag-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 10px; border-radius: 9999px; font-size: 0.8rem;
+    background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3);
+    transition: all 0.2s;
+  }
+  .tag-chip button { background: none; border: none; color: #fbbf24; cursor: pointer; font-size: 1rem; line-height: 1; padding: 0 2px; }
+  .tag-chip button:hover { color: #ef4444; }
+  .tag-chip-teal {
+    background: rgba(20,184,166,0.15); color: #2dd4bf; border: 1px solid rgba(20,184,166,0.3);
+  }
+  .tag-chip-teal button { color: #2dd4bf; }
+
+  .dropdown-container { position: relative; width: 100%; }
+
+  .autocomplete-dropdown {
+    position: fixed; z-index: 50; background: #1e293b; border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 8px; max-height: 200px; overflow-y: auto; width: auto; min-width: 200px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5); display: none;
+  }
+  .autocomplete-dropdown.show { display: block; }
+  .autocomplete-dropdown::-webkit-scrollbar { width: 6px; }
+  .autocomplete-dropdown::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 3px; }
+  .autocomplete-dropdown::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.3); border-radius: 3px; }
+  .autocomplete-dropdown::-webkit-scrollbar-thumb:hover { background: rgba(245,158,11,0.5); }
+  
+  .autocomplete-item {
+    padding: 8px 12px; cursor: pointer; font-size: 0.9rem; color: #e2e8f0;
+    transition: background 0.15s; display: block; word-break: break-word; white-space: normal;
+  }
+  .autocomplete-item:hover { background: rgba(245,158,11,0.15); }
+  .autocomplete-item.highlight-match { background: rgba(245,158,11,0.25); }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .animate-fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+  .animate-slide-in { animation: slideIn 0.3s ease-out forwards; }
+
+  .input-field {
+    background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1);
+    color: #e2e8f0; border-radius: 8px; padding: 10px 14px; width: 100%;
+    transition: border-color 0.3s, box-shadow 0.3s; font-family: 'Sarabun', sans-serif;
+  }
+  .input-field:focus {
+    outline: none; border-color: rgba(245,158,11,0.5);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+  }
+  .input-field::placeholder { color: rgba(255,255,255,0.3); }
+
+  .vocab-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .vocab-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  }
+
+  .toast-container {
+    position: fixed; top: 20px; right: 20px; z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    padding: 12px 20px; border-radius: 10px; color: white; font-size: 0.9rem;
+    animation: slideIn 0.3s ease-out; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    max-width: 350px;
+  }
+  .toast-success { background: linear-gradient(135deg, #059669, #10b981); }
+  .toast-error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+  .toast-info { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+
+  .spinner {
+    width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: #f59e0b; border-radius: 50%;
+    animation: spin 0.6s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .ai-suggestion {
+    background: linear-gradient(135deg, rgba(245,158,11,0.08), rgba(20,184,166,0.08));
+    border: 1px solid rgba(245,158,11,0.25); border-radius: 12px; padding: 16px;
+  }
+  .ai-badge {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #0f172a; font-size: 0.7rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 9999px; letter-spacing: 0.05em;
+  }
+
+  .tab-btn {
+    padding: 10px 24px; border-radius: 9999px; font-weight: 600;
+    transition: all 0.3s; cursor: pointer; border: 1px solid transparent;
+    font-family: 'Sarabun', sans-serif; font-size: 0.95rem;
+  }
+  .tab-btn.active {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #0f172a; box-shadow: 0 4px 15px rgba(245,158,11,0.3);
+  }
+  .tab-btn:not(.active) {
+    background: rgba(255,255,255,0.05); color: #94a3b8;
+    border-color: rgba(255,255,255,0.1);
+  }
+  .tab-btn:not(.active):hover {
+    background: rgba(255,255,255,0.1); color: #e2e8f0;
+  }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 100; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-content {
+    background: #1e293b; border-radius: 16px; padding: 24px; max-width: 500px;
+    width: 90%; border: 1px solid rgba(245,158,11,0.2);
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  .bg-pattern {
+    background-image: radial-gradient(rgba(245,158,11,0.03) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+
+  .model-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.7rem; padding: 2px 6px; border-radius: 6px;
+    background: rgba(20,184,166,0.15); color: #2dd4bf;
+  }
+
+  .field-group {
+    background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px; padding: 12px; font-size: 0.85rem; margin: 6px 0;
+  }
+  .field-group .label { display: block; font-weight: 600; margin-bottom: 4px; color: #fbbf24; }
+  .field-group .value { color: #e2e8f0; line-height: 1.4; }
+
+  .score-badge {
+    display: inline-block; padding: 2px 6px; border-radius: 4px;
+    font-size: 0.65rem; font-weight: 700; background: rgba(59,130,246,0.2);
+    color: #60a5fa; margin-left: 4px;
+  }
+
+  .search-highlight {
+    background: rgba(245,158,11,0.3); color: #fbbf24; font-weight: 600;
+    padding: 0 2px; border-radius: 2px;
+  }
+
+  .match-badge {
+    display: inline-block; font-size: 0.65rem; padding: 2px 6px;
+    border-radius: 4px; margin-right: 4px; font-weight: 600;
+  }
+  .match-perfect { background: rgba(34,197,94,0.2); color: #86efac; }
+  .match-high { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  .match-medium { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .match-low { background: rgba(107,114,128,0.2); color: #d1d5db; }
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto bg-pattern" style="background-color: var(--bg-deep);">
+   <div id="toast-container" class="toast-container"></div>
+   <header class="sticky top-0 z-50 backdrop-blur-xl" style="background: rgba(15,23,42,0.85); border-bottom: 1px solid rgba(245,158,11,0.15);">
+    <div class="max-w-6xl mx-auto px-4 py-4">
+     <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="flex items-center gap-3">
+       <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+        <svg width="22" height="22" viewbox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="header-title" class="serif-font text-xl font-bold" style="color: #f59e0b;">คลังคำศัพท์นักเขียน</h1>
+        <p id="header-subtitle" class="text-xs" style="color: #64748b;">รวบรวมคำศัพท์สำหรับงานเขียนของคุณ</p>
+       </div>
+      </div>
+      <div class="flex items-center gap-2"><span id="word-count-badge" class="text-xs px-3 py-1 rounded-full" style="background: rgba(20,184,166,0.15); color: #2dd4bf; border: 1px solid rgba(20,184,166,0.2);">0 คำ</span> <span id="model-status" class="model-badge">🧠 Ready</span>
+      </div>
+     </div>
+    </div>
+   </header>
+   <nav class="max-w-6xl mx-auto px-4 pt-6 pb-2">
+    <div class="flex gap-2 flex-wrap"><button class="tab-btn active" data-tab="add" onclick="switchTab('add')">✍️ เพิ่มคำศัพท์</button> <button class="tab-btn" data-tab="browse" onclick="switchTab('browse')">📖 คลังคำศัพท์</button>
+    </div>
+   </nav>
+   <main class="max-w-6xl mx-auto px-4 py-4 pb-12">
+    <section id="tab-add" class="animate-fade-in">
+     <div class="rounded-2xl p-6 mb-6" style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);">
+      <h2 class="serif-font text-lg font-bold mb-5 flex items-center gap-2" style="color: #f59e0b;">
+       <svg width="20" height="20" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 5v14M5 12h14" />
+       </svg> เพิ่มคำศัพท์ใหม่</h2>
+      <form id="vocab-form" onsubmit="handleFormSubmit(event)" autocomplete="off">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div><label for="field-type" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">ประเภท</label> <select id="field-type" class="input-field" style="cursor:pointer;"> <option value="">-- เลือกประเภท --</option> <option value="คำนาม">คำนาม</option> <option value="คำกริยา">คำกริยา</option> <option value="คำวิเศษณ์">คำวิเศษณ์</option> <option value="คำบุพบท">คำบุพบท</option> <option value="คำสันธาน">คำสันธาน</option> <option value="คำอุทาน">คำอุทาน</option> <option value="สำนวน">สำนวน</option> <option value="ประโยค">ประโยค</option> <option value="วลี">วลี</option> <option value="อื่นๆ">อื่นๆ</option> </select>
+        </div>
+        <div class="dropdown-container"><label for="field-category" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">หมวดหลัก</label> <input type="text" id="field-category" class="input-field" placeholder="พิมพ์เพื่อค้นหา..." oninput="handleAutoComplete(event, 'category')">
+         <div id="category-dropdown" class="autocomplete-dropdown"></div>
+        </div>
+        <div class="md:col-span-2 relative"><label for="field-word" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">คำ / ประโยค</label> <input type="text" id="field-word" class="input-field" placeholder="กรอกคำศัพท์หรือประโยค..." oninput="checkDuplicate(this.value)">
+         <div id="duplicate-warning" class="hidden mt-1 text-xs" style="color: #ef4444;"></div>
+        </div>
+        <div class="md:col-span-2"><label for="field-meaning" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">ความหมาย</label> <textarea id="field-meaning" class="input-field" rows="2" placeholder="อธิบายความหมาย..."></textarea>
+        </div>
+        <div class="dropdown-container"><label for="field-verb" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">กริยา</label> <input type="text" id="field-verb" class="input-field" placeholder="พิมพ์เพื่อค้นหา..." oninput="handleAutoComplete(event, 'verb')">
+         <div id="verb-dropdown" class="autocomplete-dropdown"></div>
+        </div>
+        <div class="dropdown-container"><label for="field-mood" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">อารมณ์</label>
+         <div id="mood-tags" class="flex flex-wrap gap-1.5 mb-2"></div><input type="text" id="field-mood" class="input-field" placeholder="พิมพ์แล้วกด Enter..." onkeydown="handleTagKeydown(event, 'mood')" oninput="handleAutoComplete(event, 'mood')">
+         <div id="mood-dropdown" class="autocomplete-dropdown"></div>
+        </div>
+        <div class="md:col-span-2 dropdown-container"><label for="field-expression" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">แสดงออกทาง</label>
+         <div id="expression-tags" class="flex flex-wrap gap-1.5 mb-2"></div><input type="text" id="field-expression" class="input-field" placeholder="พิมพ์แล้วกด Enter..." onkeydown="handleTagKeydown(event, 'expression')" oninput="handleAutoComplete(event, 'expression')">
+         <div id="expression-dropdown" class="autocomplete-dropdown"></div>
+        </div>
+       </div>
+       <div id="ai-suggestion-area" class="hidden mt-5">
+        <div class="ai-suggestion">
+         <div class="flex items-center gap-2 mb-3"><span class="ai-badge">✨ AI</span> <span class="text-sm font-medium" style="color: #fbbf24;">เติมข้อมูลครบทุกช่อง</span>
+         </div>
+         <div id="ai-suggestions-content" class="space-y-2 text-sm max-h-96 overflow-y-auto"></div>
+         <div class="flex gap-2 mt-4 flex-wrap"><button type="button" onclick="applyAiSuggestions()" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a;"> ✅ ใช้ครบทั้งหมด </button> <button type="button" onclick="dismissAiSuggestions()" class="px-4 py-2 rounded-lg text-sm font-medium transition-all" style="background: rgba(255,255,255,0.1); color: #94a3b8;"> ❌ ยกเลิก </button>
+         </div>
+        </div>
+       </div>
+       <div class="flex flex-wrap gap-3 mt-6"><button type="button" onclick="requestAiHelp()" id="btn-ai" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2" style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(20,184,166,0.2)); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3);"> <span>✨</span> AI เติมครบ </button> <button type="submit" id="btn-save" class="px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a;">
+         <svg width="16" height="16" viewbox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" /><polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+         </svg> บันทึก </button> <button type="button" onclick="resetForm()" class="px-5 py-2.5 rounded-xl text-sm font-medium transition-all" style="background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1);"> ล้างฟอร์ม </button>
+       </div>
+      </form>
+     </div>
+    </section>
+    <section id="tab-browse" class="hidden animate-fade-in">
+     <div class="rounded-2xl p-5 mb-5" style="background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="grid grid-cols-1 gap-4">
+       <div><label for="search-normal" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">🔍 ค้นหา (Smart Search)</label> <input type="text" id="search-normal" class="input-field" placeholder="พิมพ์เพื่อค้นหา...">
+        <p class="text-xs mt-2" style="color: #64748b;">✨ รองรับ: คำตรงตัว • บางส่วนคำ • สะกดใกล้เคียง • หลายคำพร้อมกัน</p>
+       </div>
+      </div>
+      <div class="flex flex-wrap gap-3 mt-4">
+       <div><label for="filter-type" class="block text-xs mb-1" style="color: #64748b;">ประเภท</label> <select id="filter-type" class="input-field text-sm py-1.5" style="min-width: 120px;"> <option value="">ทั้งหมด</option> </select>
+       </div>
+       <div><label for="filter-category" class="block text-xs mb-1" style="color: #64748b;">หมวดหลัก</label> <select id="filter-category" class="input-field text-sm py-1.5" style="min-width: 120px;"> <option value="">ทั้งหมด</option> </select>
+       </div>
+       <div><label for="filter-mood" class="block text-xs mb-1" style="color: #64748b;">อารมณ์</label> <select id="filter-mood" class="input-field text-sm py-1.5" style="min-width: 120px;"> <option value="">ทั้งหมด</option> </select>
+       </div>
+       <div class="flex items-end"><button type="button" onclick="clearFilters()" class="px-3 py-1.5 rounded-lg text-xs font-medium" style="background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1);">ล้างตัวกรอง</button>
+       </div>
+      </div>
+     </div>
+     <div id="vocab-list-container">
+      <div id="vocab-list" class="space-y-3"></div>
+      <div id="no-results" class="hidden text-center py-12">
+       <div class="text-4xl mb-3">
+        📖
+       </div>
+       <p class="text-sm" style="color: #64748b;">ไม่พบคำศัพท์ที่ตรงกัน</p>
+      </div>
+      <div id="loading-data" class="text-center py-12">
+       <div class="spinner mx-auto mb-3"></div>
+       <p class="text-sm" style="color: #64748b;">กำลังโหลดข้อมูล...</p>
+      </div>
+     </div>
+    </section>
+   </main>
+   <div id="edit-modal" class="modal-overlay hidden">
+    <div class="modal-content max-h-[85%] overflow-y-auto">
+     <div class="flex items-center justify-between mb-4">
+      <h3 class="serif-font text-lg font-bold" style="color: #f59e0b;">✏️ แก้ไขคำศัพท์</h3><button type="button" onclick="closeEditModal()" class="text-xl" style="color: #64748b;">✕</button>
+     </div>
+     <form id="edit-form" onsubmit="handleEditSubmit(event)" autocomplete="off"><input type="hidden" id="edit-row-index">
+      <div class="space-y-4">
+       <div><label for="edit-type" class="block text-sm font-medium mb-1" style="color: #94a3b8;">ประเภท</label> <select id="edit-type" class="input-field"> <option value="">-- เลือกประเภท --</option> <option value="คำนาม">คำนาม</option> <option value="คำกริยา">คำกริยา</option> <option value="คำวิเศษณ์">คำวิเศษณ์</option> <option value="คำบุพบท">คำบุพบท</option> <option value="คำสันธาน">คำสันธาน</option> <option value="คำอุทาน">คำอุทาน</option> <option value="สำนวน">สำนวน</option> <option value="ประโยค">ประโยค</option> <option value="วลี">วลี</option> <option value="อื่นๆ">อื่นๆ</option> </select>
+       </div>
+       <div><label for="edit-category" class="block text-sm font-medium mb-1" style="color: #94a3b8;">หมวดหลัก</label> <input type="text" id="edit-category" class="input-field">
+       </div>
+       <div><label for="edit-word" class="block text-sm font-medium mb-1" style="color: #94a3b8;">คำ / ประโยค</label> <input type="text" id="edit-word" class="input-field">
+       </div>
+       <div><label for="edit-meaning" class="block text-sm font-medium mb-1" style="color: #94a3b8;">ความหมาย</label> <textarea id="edit-meaning" class="input-field" rows="2"></textarea>
+       </div>
+       <div><label for="edit-verb" class="block text-sm font-medium mb-1" style="color: #94a3b8;">กริยา</label> <input type="text" id="edit-verb" class="input-field">
+       </div>
+       <div><label for="edit-mood" class="block text-sm font-medium mb-1" style="color: #94a3b8;">อารมณ์ (คั่นด้วยช่องว่าง)</label> <input type="text" id="edit-mood" class="input-field">
+       </div>
+       <div><label for="edit-expression" class="block text-sm font-medium mb-1" style="color: #94a3b8;">แสดงออกทาง (คั่นด้วยช่องว่าง)</label> <input type="text" id="edit-expression" class="input-field">
+       </div>
+      </div>
+      <div class="flex gap-2 mt-5"><button type="submit" id="btn-edit-save" class="px-5 py-2 rounded-xl text-sm font-bold" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a;">บันทึก</button> <button type="button" onclick="closeEditModal()" class="px-5 py-2 rounded-xl text-sm font-medium" style="background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1);">ยกเลิก</button>
+      </div>
+     </form>
+    </div>
+   </div>
+   <div id="delete-modal" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 380px;">
+     <div class="text-center">
+      <div class="text-4xl mb-3">
+       ⚠️
+      </div>
+      <h3 class="serif-font text-lg font-bold mb-2" style="color: #ef4444;">ยืนยันการลบ</h3>
+      <p class="text-sm mb-5" style="color: #94a3b8;">คุณต้องการลบคำศัพท์นี้หรือไม่?</p>
+      <p id="delete-word-preview" class="text-base font-bold mb-5" style="color: #e2e8f0;"></p>
+      <div class="flex gap-2 justify-center"><button type="button" id="btn-confirm-delete" onclick="confirmDelete()" class="px-5 py-2 rounded-xl text-sm font-bold" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: white;">ลบ</button> <button type="button" onclick="closeDeleteModal()" class="px-5 py-2 rounded-xl text-sm font-medium" style="background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1);">ยกเลิก</button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjc3n6fVpSRQvHjck2C3fRbuFS51bxOPW8bBZ3GFoSOIm9LUvNE-J92LFBwH41zmuc/exec';
+const GEMINI_API_KEY = 'AIzaSyAS23s00nL2xZ8zvhbAUojzlj3YpBXlHSw';
+
+const MODELS = {
+  autofill: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.0-flash', 'gemini-2.0-flash-001', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-lite-001']
+};
+
+let modelState = { autofillIndex: 0 };
+let allVocabData = [];
+let moodTags = [];
+let expressionTags = [];
+let currentAiSuggestions = {};
+let pendingDeleteIndex = null;
+let lastAiCallTime = 0;
+
+function getModelUrl(modelName) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+}
+
+function rotateModel(category) {
+  const models = MODELS[category];
+  if (!models) return null;
+  const currentIndex = modelState[`${category}Index`] || 0;
+  const nextIndex = (currentIndex + 1) % models.length;
+  modelState[`${category}Index`] = nextIndex;
+  return models[nextIndex];
+}
+
+function getCurrentModel(category) {
+  const models = MODELS[category];
+  if (!models) return null;
+  const currentIndex = modelState[`${category}Index`] || 0;
+  return models[currentIndex];
+}
+
+async function callGeminiWithFallback(prompt, category, maxRetries = 3) {
+  let lastError = null;
+  let modelUsed = '';
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const model = getCurrentModel(category);
+      if (!model) throw new Error('ไม่พบโมเดล');
+      
+      modelUsed = model;
+      const url = getModelUrl(model);
+      console.log(`📡 Attempt ${attempt + 1}/${maxRetries} - Model: ${model}`);
+      
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.5, maxOutputTokens: 1500 }
+        })
+      });
+
+      if (resp.status === 429) {
+        console.warn(`⚠️ Rate limit on ${model}, rotating...`);
+        lastError = new Error('Rate Limit');
+        rotateModel(category);
+        continue;
+      }
+
+      if (!resp.ok) {
+        console.warn(`⚠️ HTTP Error ${resp.status}, rotating...`);
+        lastError = new Error(`HTTP ${resp.status}`);
+        rotateModel(category);
+        continue;
+      }
+
+      const data = await resp.json();
+      if (data.error) {
+        console.warn(`⚠️ API error: ${data.error.message}, rotating...`);
+        lastError = new Error(data.error.message || 'API Error');
+        rotateModel(category);
+        continue;
+      }
+
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      return { success: true, text, model: modelUsed };
+
+    } catch (err) {
+      lastError = err;
+      console.warn(`⚠️ Attempt ${attempt + 1} error:`, err.message);
+      if (attempt < maxRetries - 1) {
+        rotateModel(category);
+      }
+    }
+  }
+
+  return { success: false, error: lastError, model: modelUsed };
+}
+
+function levenshteinDistance(a, b) {
+  const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(0));
+  for (let i = 0; i <= a.length; i++) matrix[0][i] = i;
+  for (let j = 0; j <= b.length; j++) matrix[j][0] = j;
+  for (let j = 1; j <= b.length; j++) {
+    for (let i = 1; i <= a.length; i++) {
+      const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[j][i] = Math.min(
+        matrix[j][i - 1] + 1,
+        matrix[j - 1][i] + 1,
+        matrix[j - 1][i - 1] + indicator
+      );
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+function calculateMatchScore(text, query) {
+  const textLower = text.toLowerCase();
+  const queryLower = query.toLowerCase();
+  
+  if (!text || !query) return 0;
+  let score = 0;
+  
+  if (textLower === queryLower) return 100;
+  if (textLower.startsWith(queryLower)) score += 80;
+  if (textLower.includes(queryLower)) score += 50;
+  
+  const textWords = textLower.split(/\s+/);
+  const queryWords = queryLower.split(/\s+/);
+  let matchedWords = 0;
+  for (const qw of queryWords) {
+    for (const tw of textWords) {
+      if (tw.startsWith(qw)) matchedWords++;
+    }
+  }
+  if (matchedWords > 0) score += matchedWords * 20;
+  
+  const maxDist = Math.max(3, Math.floor(queryLower.length / 2));
+  if (levenshteinDistance(textLower, queryLower) <= maxDist) {
+    const dist = levenshteinDistance(textLower, queryLower);
+    score += Math.max(5, 30 - dist * 5);
+  }
+  
+  return score;
+}
+
+function advancedSearch(data, searchQuery) {
+  if (!searchQuery.trim()) return data;
+  
+  const queries = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+  const results = [];
+  
+  for (let idx = 0; idx < data.length; idx++) {
+    const row = data[idx];
+    const fields = ['คำ/ประโยค', 'ความหมาย', 'อารมณ์', 'หมวดหลัก', 'ประเภท', 'กริยา', 'แสดงออกทาง'];
+    
+    let totalScore = 0;
+    let matchedFields = new Set();
+    let highlights = {};
+    
+    for (const query of queries) {
+      let bestFieldScore = 0;
+      let bestFieldName = '';
+      
+      for (const field of fields) {
+        const value = (row[field] || '').toLowerCase();
+        if (!value) continue;
+        
+        const score = calculateMatchScore(value, query);
+        if (score > bestFieldScore) {
+          bestFieldScore = score;
+          bestFieldName = field;
+          if (score > 0) matchedFields.add(field);
+        }
+      }
+      
+      totalScore += bestFieldScore;
+      if (bestFieldName && bestFieldScore > 0) {
+        if (!highlights[bestFieldName]) highlights[bestFieldName] = [];
+        highlights[bestFieldName].push(query);
+      }
+    }
+    
+    if (totalScore > 0) {
+      row._searchScore = totalScore;
+      row._matchedFields = matchedFields;
+      row._highlights = highlights;
+      row._index = idx;
+      results.push(row);
+    }
+  }
+  
+  results.sort((a, b) => b._searchScore - a._searchScore);
+  return results;
+}
+
+function getMatchBadge(score) {
+  if (score >= 90) return '<span class="match-badge match-perfect">✨ Perfect</span>';
+  if (score >= 70) return '<span class="match-badge match-high">🎯 High</span>';
+  if (score >= 40) return '<span class="match-badge match-medium">📍 Medium</span>';
+  return '<span class="match-badge match-low">🔍 Found</span>';
+}
+
+const defaultConfig = {
+  app_title: 'คลังคำศัพท์นักเขียน',
+  subtitle: 'รวบรวมคำศัพท์สำหรับงานเขียนของคุณ',
+  background_color: '#0f172a',
+  surface_color: '#1e293b',
+  text_color: '#e2e8f0',
+  accent_color: '#f59e0b',
+  secondary_accent: '#14b8a6',
+  font_family: 'Sarabun',
+  font_size: 16
+};
+
+function applyConfig(config) {
+  const title = config.app_title || defaultConfig.app_title;
+  const subtitle = config.subtitle || defaultConfig.subtitle;
+  document.getElementById('header-title').textContent = title;
+  document.getElementById('header-subtitle').textContent = subtitle;
+}
+
+if (window.elementSdk) {
+  window.elementSdk.init({
+    defaultConfig,
+    onConfigChange: async (config) => { applyConfig(config); },
+    mapToCapabilities: (config) => ({
+      recolorables: [
+        { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); }},
+        { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); }},
+        { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); }},
+        { get: () => config.accent_color || defaultConfig.accent_color, set: (v) => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); }},
+        { get: () => config.secondary_accent || defaultConfig.secondary_accent, set: (v) => { config.secondary_accent = v; window.elementSdk.setConfig({ secondary_accent: v }); }}
+      ],
+      borderables: [],
+      fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }},
+      fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }}
+    }),
+    mapToEditPanelValues: (config) => new Map([['app_title', config.app_title || defaultConfig.app_title], ['subtitle', config.subtitle || defaultConfig.subtitle]])
+  });
+}
+
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.3s'; setTimeout(() => toast.remove(), 300); }, 3500);
+}
+
+function updateModelStatus(model) {
+  document.getElementById('model-status').textContent = `🧠 ${model || 'Gemini'}`;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); });
+  document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+  document.getElementById('tab-add').classList.toggle('hidden', tab !== 'add');
+  document.getElementById('tab-browse').classList.toggle('hidden', tab !== 'browse');
+  if (tab === 'browse') loadSheetData();
+}
+
+async function loadSheetData() {
+  const loadingEl = document.getElementById('loading-data');
+  loadingEl.classList.remove('hidden');
+  document.getElementById('vocab-list').innerHTML = '';
+  document.getElementById('no-results').classList.add('hidden');
+
+  try {
+    const resp = await fetch(`${APPS_SCRIPT_URL}?action=getAll`);
+    const result = await resp.json();
+    if (result.status === 'success' && Array.isArray(result.data)) {
+      allVocabData = result.data;
+      updateWordCount(allVocabData.length);
+      populateFilters();
+      filterVocabList();
+    } else {
+      showToast('ไม่สามารถโหลดข้อมูลได้', 'error');
+    }
+  } catch (err) {
+    showToast('เกิดข้อผิดพลาด: ' + err.message, 'error');
+  } finally {
+    loadingEl.classList.add('hidden');
+  }
+}
+
+function updateWordCount(count) {
+  document.getElementById('word-count-badge').textContent = `${count} คำ`;
+}
+
+function populateFilters() {
+  const types = new Set(), categories = new Set(), moods = new Set();
+  for (const row of allVocabData) {
+    if (row['ประเภท']) types.add(row['ประเภท']);
+    if (row['หมวดหลัก']) categories.add(row['หมวดหลัก']);
+    if (row['อารมณ์']) row['อารมณ์'].split(/\s+/).forEach(m => { if (m.trim()) moods.add(m.trim()); });
+  }
+  populateSelect('filter-type', types);
+  populateSelect('filter-category', categories);
+  populateSelect('filter-mood', moods);
+}
+
+function populateSelect(id, values) {
+  const sel = document.getElementById(id);
+  const currentVal = sel.value;
+  while (sel.options.length > 1) sel.remove(1);
+  [...values].sort().forEach(v => { const opt = document.createElement('option'); opt.value = v; opt.textContent = v; sel.appendChild(opt); });
+  sel.value = currentVal;
+}
+
+function filterVocabList() {
+  const searchText = document.getElementById('search-normal').value.trim();
+  const filterType = document.getElementById('filter-type').value;
+  const filterCategory = document.getElementById('filter-category').value;
+  const filterMood = document.getElementById('filter-mood').value;
+
+  let filtered = allVocabData;
+  
+  if (searchText) {
+    filtered = advancedSearch(filtered, searchText);
+  }
+  
+  filtered = filtered.filter(row => {
+    const matchType = !filterType || row['ประเภท'] === filterType;
+    const matchCategory = !filterCategory || row['หมวดหลัก'] === filterCategory;
+    const matchMood = !filterMood || (row['อารมณ์'] || '').includes(filterMood);
+    return matchType && matchCategory && matchMood;
+  });
+
+  renderVocabList(filtered);
+}
+
+function highlightText(text, highlights) {
+  if (!highlights || highlights.length === 0) return text;
+  
+  let result = text;
+  for (const keyword of highlights) {
+    const regex = new RegExp(`(${keyword})`, 'gi');
+    result = result.replace(regex, '<span class="search-highlight">$1</span>');
+  }
+  return result;
+}
+
+function renderVocabList(data) {
+  const container = document.getElementById('vocab-list');
+  const noResults = document.getElementById('no-results');
+
+  if (data.length === 0) {
+    container.innerHTML = '';
+    noResults.classList.remove('hidden');
+    return;
+  }
+  noResults.classList.add('hidden');
+
+  const fragment = document.createDocumentFragment();
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const card = document.createElement('div');
+    card.className = 'vocab-card rounded-xl p-4 animate-slide-in';
+    card.style.cssText = `background: var(--bg-card); border: 1px solid rgba(255,255,255,0.06); animation-delay: ${Math.min(i * 30, 300)}ms;`;
+    card.dataset.rowIndex = row._index;
+
+    let wordDisplay = row['คำ/ประโยค'] || '-';
+    if (row._highlights && row._highlights['คำ/ประโยค']) {
+      wordDisplay = highlightText(wordDisplay, row._highlights['คำ/ประโยค']);
+    }
+
+    const moodTagsHtml = (row['อารมณ์'] || '').split(/\s+/).filter(Boolean).map(t => `<span class="tag-chip" style="cursor:default;"><span>${t}</span></span>`).join('');
+    const exprTagsHtml = (row['แสดงออกทาง'] || '').split(/\s+/).filter(Boolean).map(t => `<span class="tag-chip tag-chip-teal" style="cursor:default;"><span>${t}</span></span>`).join('');
+
+    const scoreDisplay = row._searchScore ? getMatchBadge(row._searchScore) : '';
+
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <span class="serif-font text-base font-bold" style="color: var(--accent-gold);">${wordDisplay}</span>
+            ${scoreDisplay}
+            ${row['ประเภท'] ? `<span class="text-xs px-2 py-0.5 rounded-full" style="background: rgba(255,255,255,0.08); color: #94a3b8;">${row['ประเภท']}</span>` : ''}
+            ${row['หมวดหลัก'] ? `<span class="text-xs px-2 py-0.5 rounded-full" style="background: rgba(20,184,166,0.1); color: #2dd4bf;">${row['หมวดหลัก']}</span>` : ''}
+          </div>
+          ${row['ความหมาย'] ? `<p class="text-sm mb-2" style="color: var(--text-main); opacity: 0.85;">${highlightText(row['ความหมาย'], row._highlights && row._highlights['ความหมาย'] ? row._highlights['ความหมาย'] : [])}</p>` : ''}
+          ${row['กริยา'] ? `<p class="text-xs mb-1" style="color: #64748b;">กริยา: <span style="color: #94a3b8;">${row['กริยา']}</span></p>` : ''}
+          <div class="flex flex-wrap gap-1 mt-2">${moodTagsHtml}${exprTagsHtml}</div>
+          ${row['วันที่บันทึก'] ? `<p class="text-xs mt-2" style="color: #475569;">📅 ${row['วันที่บันทึก']}</p>` : ''}
+        </div>
+        <div class="flex gap-1 flex-shrink-0">
+          <button type="button" onclick="openEditModal(${row._index})" class="p-2 rounded-lg transition-all" style="background: rgba(255,255,255,0.05);" title="แก้ไข">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button type="button" onclick="openDeleteModal(${row._index})" class="p-2 rounded-lg transition-all" style="background: rgba(255,255,255,0.05);" title="ลบ">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          </button>
+        </div>
+      </div>
+    `;
+    fragment.appendChild(card);
+  }
+
+  container.innerHTML = '';
+  container.appendChild(fragment);
+}
+
+function handleAutoComplete(event, fieldType) {
+  const input = event.target;
+  const query = input.value.toLowerCase().trim();
+  
+  const dropdownId = fieldType === 'category' ? 'category-dropdown' : 
+                     fieldType === 'verb' ? 'verb-dropdown' :
+                     fieldType === 'mood' ? 'mood-dropdown' : 'expression-dropdown';
+  
+  const dropdown = document.getElementById(dropdownId);
+  const columnName = fieldType === 'category' ? 'หมวดหลัก' :
+                     fieldType === 'verb' ? 'กริยา' :
+                     fieldType === 'mood' ? 'อารมณ์' : 'แสดงออกทาง';
+
+  let values = new Set();
+  for (const row of allVocabData) {
+    const val = row[columnName] || '';
+    if (columnName === 'อารมณ์' || columnName === 'แสดงออกทาง') {
+      val.split(/\s+/).forEach(v => { if (v.trim()) values.add(v.trim()); });
+    } else {
+      if (val.trim()) values.add(val.trim());
+    }
+  }
+
+  let matches = [...values];
+  if (query) {
+    matches = matches.filter(v => v.toLowerCase().includes(query));
+  }
+  matches = matches.sort().slice(0, 15);
+
+  if (matches.length === 0) {
+    dropdown.classList.remove('show');
+    return;
+  }
+
+  const rect = input.getBoundingClientRect();
+  dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+  dropdown.style.left = (rect.left + window.scrollX) + 'px';
+  dropdown.style.width = rect.width + 'px';
+
+  dropdown.innerHTML = matches.map(m => {
+    const highlighted = query && m.toLowerCase().includes(query.toLowerCase());
+    const highlightedText = query 
+      ? m.replace(new RegExp(`(${query})`, 'gi'), '<span style="color: #fbbf24; font-weight: 600;">$1</span>')
+      : m;
+    const itemClass = highlighted ? 'highlight-match' : '';
+    return `<div class="autocomplete-item ${itemClass}" onclick="selectAutoComplete('${input.id}', '${dropdownId}', '${m.replace(/'/g, "\\'")}', '${fieldType}')">${highlightedText}</div>`;
+  }).join('');
+  
+  dropdown.classList.add('show');
+}
+
+function selectAutoComplete(inputId, dropdownId, value, fieldType) {
+  if (fieldType === 'mood') {
+    addTag('mood', value);
+    document.getElementById(inputId).value = '';
+  } else if (fieldType === 'expression') {
+    addTag('expression', value);
+    document.getElementById(inputId).value = '';
+  } else {
+    document.getElementById(inputId).value = value;
+  }
+  document.getElementById(dropdownId).classList.remove('show');
+}
+
+function handleTagKeydown(event, type) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    const input = event.target;
+    const value = input.value.trim();
+    if (value) {
+      addTag(type, value);
+      input.value = '';
+      const dropdownId = type === 'mood' ? 'mood-dropdown' : 'expression-dropdown';
+      document.getElementById(dropdownId).classList.remove('show');
+    }
+  }
+}
+
+function addTag(type, value) {
+  const tags = type === 'mood' ? moodTags : expressionTags;
+  if (tags.includes(value)) return;
+  tags.push(value);
+  renderTags(type);
+}
+
+function removeTag(type, index) {
+  const tags = type === 'mood' ? moodTags : expressionTags;
+  tags.splice(index, 1);
+  renderTags(type);
+}
+
+function renderTags(type) {
+  const tags = type === 'mood' ? moodTags : expressionTags;
+  const container = document.getElementById(`${type === 'mood' ? 'mood' : 'expression'}-tags`);
+  const chipClass = type === 'mood' ? 'tag-chip' : 'tag-chip tag-chip-teal';
+  container.innerHTML = tags.map((t, i) => `<span class="${chipClass}"><span>${t}</span><button type="button" onclick="removeTag('${type}', ${i})">×</button></span>`).join('');
+}
+
+function checkDuplicate(value) {
+  const warning = document.getElementById('duplicate-warning');
+  if (!value.trim()) { warning.classList.add('hidden'); return; }
+  let duplicate = false;
+  for (const row of allVocabData) {
+    if ((row['คำ/ประโยค'] || '').toLowerCase() === value.toLowerCase().trim()) {
+      duplicate = true;
+      break;
+    }
+  }
+  if (duplicate) {
+    warning.textContent = `⚠️ พบคำซ้ำ "${value}"`;
+    warning.classList.remove('hidden');
+  } else {
+    warning.classList.add('hidden');
+  }
+}
+
+async function handleFormSubmit(event) {
+  event.preventDefault();
+  const btn = document.getElementById('btn-save');
+  const word = document.getElementById('field-word').value.trim();
+
+  if (!word) {
+    showToast('กรุณากรอกคำ/ประโยค', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> บันทึก...';
+
+  const now = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+
+  const payload = {
+    action: 'add',
+    data: {
+      'ประเภท': document.getElementById('field-type').value,
+      'หมวดหลัก': document.getElementById('field-category').value.trim(),
+      'ความหมาย': document.getElementById('field-meaning').value.trim(),
+      'คำ/ประโยค': word,
+      'กริยา': document.getElementById('field-verb').value.trim(),
+      'อารมณ์': moodTags.join(' '),
+      'แสดงออกทาง': expressionTags.join(' '),
+      'วันที่บันทึก': now,
+      'วันที่แก้ไข': ''
+    }
+  };
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+    const result = await resp.json();
+    if (result.status === 'success') {
+      showToast('✅ บันทึกสำเร็จ!', 'success');
+      resetForm();
+      loadSheetDataSilent();
+    } else {
+      showToast('เกิดข้อผิดพลาด', 'error');
+    }
+  } catch (err) {
+    showToast('ไม่สามารถบันทึก: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> บันทึก';
+  }
+}
+
+function resetForm() {
+  document.getElementById('vocab-form').reset();
+  moodTags = [];
+  expressionTags = [];
+  renderTags('mood');
+  renderTags('expression');
+  document.getElementById('ai-suggestion-area').classList.add('hidden');
+  document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('show'));
+}
+
+async function loadSheetDataSilent() {
+  try {
+    const resp = await fetch(`${APPS_SCRIPT_URL}?action=getAll`);
+    const result = await resp.json();
+    if (result.status === 'success') allVocabData = result.data;
+  } catch (e) {}
+}
+
+async function requestAiHelp() {
+  const btn = document.getElementById('btn-ai');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> AI...';
+
+  const now = Date.now();
+  if (now - lastAiCallTime < 2000) {
+    showToast('⏳ กรุณารอสักครู่...', 'info');
+    btn.disabled = false;
+    btn.innerHTML = '<span>✨</span> AI เติมครบ';
+    return;
+  }
+  lastAiCallTime = now;
+
+  const currentData = {
+    'ประเภท': document.getElementById('field-type').value,
+    'หมวดหลัก': document.getElementById('field-category').value.trim(),
+    'ความหมาย': document.getElementById('field-meaning').value.trim(),
+    'คำ/ประโยค': document.getElementById('field-word').value.trim(),
+    'กริยา': document.getElementById('field-verb').value.trim(),
+    'อารมณ์': moodTags.join(' '),
+    'แสดงออกทาง': expressionTags.join(' ')
+  };
+
+  const filledFields = Object.entries(currentData)
+    .filter(([,v]) => v)
+    .map(([k,v]) => `${k}: "${v}"`)
+    .join('\n') || '(ไม่มี)';
+
+  const prompt = `Return ONLY valid JSON response, absolutely NO text before or after JSON. ตัวอักษรภาษาไทยทั้งหมด, ใช้ช่องว่างคั่นสำหรับ อารมณ์ และ แสดงออกทาง.
+
+Task: เติมข้อมูลในทุกช่องให้ครบถ้วน
+
+ข้อมูลที่มีอยู่:
+${filledFields}
+
+Response: เติมทุกช่องที่ว่างเปล่า แสดงเป็น JSON เท่านั้น
+{
+"ประเภท": "value",
+"หมวดหลัก": "value",
+"ความหมาย": "value",
+"คำ/ประโยค": "value",
+"กริยา": "value",
+"อารมณ์": "value1 value2 value3",
+"แสดงออกทาง": "value1 value2 value3"
+}`;
+
+  btn.innerHTML = '<span class="spinner"></span> AI...';
+  const result = await callGeminiWithFallback(prompt, 'autofill');
+  
+  if (result.success) {
+    updateModelStatus(result.model);
+    let jsonObj = null;
+    
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        jsonObj = JSON.parse(jsonMatch[0]);
+        console.log('✅ JSON parsed:', jsonObj);
+      } catch (e) {
+        console.log('JSON parse failed');
+      }
+    }
+    
+    if (jsonObj && Object.keys(jsonObj).length > 0) {
+      currentAiSuggestions = jsonObj;
+      showAiSuggestions(currentAiSuggestions, currentData);
+      showToast('✨ AI เติมครบทุกช่องให้คุณ', 'info');
+    } else {
+      console.log('Full response:', result.text);
+      showToast('❌ ไม่สามารถแยก JSON', 'error');
+    }
+  } else {
+    updateModelStatus('Error');
+    showToast(`❌ ${result.error?.message || 'ไม่สามารถเรียก AI'}`, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>✨</span> AI เติมครบ';
+}
+
+function showAiSuggestions(suggestions, currentData) {
+  const area = document.getElementById('ai-suggestion-area');
+  const content = document.getElementById('ai-suggestions-content');
+  
+  const fields = ['ประเภท', 'หมวดหลัก', 'ความหมาย', 'คำ/ประโยค', 'กริยา', 'อารมณ์', 'แสดงออกทาง'];
+  
+  let html = '';
+  for (const field of fields) {
+    const value = suggestions[field] || currentData[field] || '';
+    const isEmpty = !currentData[field];
+    const isDifferent = suggestions[field] && suggestions[field] !== currentData[field];
+    
+    if (isEmpty || isDifferent) {
+      html += `<div class="field-group">
+        <span class="label">${field} ${isEmpty ? '(เติม)' : '(แทน)'}</span>
+        <span class="value">${value}</span>
+      </div>`;
+    }
+  }
+  
+  content.innerHTML = html;
+  area.classList.remove('hidden');
+}
+
+function applyAiSuggestions() {
+  if (!currentAiSuggestions) return;
+  
+  if (currentAiSuggestions['ประเภท']) document.getElementById('field-type').value = currentAiSuggestions['ประเภท'];
+  if (currentAiSuggestions['หมวดหลัก']) document.getElementById('field-category').value = currentAiSuggestions['หมวดหลัก'];
+  if (currentAiSuggestions['ความหมาย']) document.getElementById('field-meaning').value = currentAiSuggestions['ความหมาย'];
+  if (currentAiSuggestions['คำ/ประโยค']) document.getElementById('field-word').value = currentAiSuggestions['คำ/ประโยค'];
+  if (currentAiSuggestions['กริยา']) document.getElementById('field-verb').value = currentAiSuggestions['กริยา'];
+  
+  if (currentAiSuggestions['อารมณ์']) {
+    moodTags = currentAiSuggestions['อารมณ์'].split(/\s+/).filter(Boolean);
+    renderTags('mood');
+  }
+  if (currentAiSuggestions['แสดงออกทาง']) {
+    expressionTags = currentAiSuggestions['แสดงออกทาง'].split(/\s+/).filter(Boolean);
+    renderTags('expression');
+  }
+  
+  showToast('✅ ใช้ครบทั้งหมด!', 'success');
+  dismissAiSuggestions();
+}
+
+function dismissAiSuggestions() {
+  document.getElementById('ai-suggestion-area').classList.add('hidden');
+  currentAiSuggestions = {};
+}
+
+function openEditModal(index) {
+  const row = allVocabData[index];
+  if (!row) return;
+  document.getElementById('edit-row-index').value = index;
+  document.getElementById('edit-type').value = row['ประเภท'] || '';
+  document.getElementById('edit-category').value = row['หมวดหลัก'] || '';
+  document.getElementById('edit-word').value = row['คำ/ประโยค'] || '';
+  document.getElementById('edit-meaning').value = row['ความหมาย'] || '';
+  document.getElementById('edit-verb').value = row['กริยา'] || '';
+  document.getElementById('edit-mood').value = row['อารมณ์'] || '';
+  document.getElementById('edit-expression').value = row['แสดงออกทาง'] || '';
+  document.getElementById('edit-modal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden');
+}
+
+async function handleEditSubmit(event) {
+  event.preventDefault();
+  const btn = document.getElementById('btn-edit-save');
+  const index = parseInt(document.getElementById('edit-row-index').value);
+  btn.disabled = true;
+  btn.textContent = 'บันทึก...';
+
+  const now = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+  const payload = {
+    action: 'update',
+    rowIndex: index + 2,
+    data: {
+      'ประเภท': document.getElementById('edit-type').value,
+      'หมวดหลัก': document.getElementById('edit-category').value.trim(),
+      'ความหมาย': document.getElementById('edit-meaning').value.trim(),
+      'คำ/ประโยค': document.getElementById('edit-word').value.trim(),
+      'กริยา': document.getElementById('edit-verb').value.trim(),
+      'อารมณ์': document.getElementById('edit-mood').value.trim(),
+      'แสดงออกทาง': document.getElementById('edit-expression').value.trim(),
+      'วันที่แก้ไข': now
+    }
+  };
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+    const result = await resp.json();
+    if (result.status === 'success') {
+      showToast('✅ แก้ไขสำเร็จ!', 'success');
+      closeEditModal();
+      loadSheetData();
+    } else {
+      showToast('เกิดข้อผิดพลาด', 'error');
+    }
+  } catch (err) {
+    showToast('ไม่สามารถแก้ไข: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'บันทึก';
+  }
+}
+
+function openDeleteModal(index) {
+  pendingDeleteIndex = index;
+  document.getElementById('delete-word-preview').textContent = `"${allVocabData[index]['คำ/ประโยค']}"`;
+  document.getElementById('delete-modal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.add('hidden');
+  pendingDeleteIndex = null;
+}
+
+async function confirmDelete() {
+  if (pendingDeleteIndex === null) return;
+  const btn = document.getElementById('btn-confirm-delete');
+  btn.disabled = true;
+  btn.textContent = 'ลบ...';
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'delete', rowIndex: pendingDeleteIndex + 2 }) });
+    const result = await resp.json();
+    if (result.status === 'success') {
+      showToast('🗑️ ลบแล้ว', 'success');
+      closeDeleteModal();
+      loadSheetData();
+    } else {
+      showToast('เกิดข้อผิดพลาด', 'error');
+    }
+  } catch (err) {
+    showToast('ไม่สามารถลบ: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'ลบ';
+  }
+}
+
+function clearFilters() {
+  document.getElementById('search-normal').value = '';
+  document.getElementById('filter-type').value = '';
+  document.getElementById('filter-category').value = '';
+  document.getElementById('filter-mood').value = '';
+  filterVocabList();
+}
+
+document.getElementById('search-normal').addEventListener('input', filterVocabList);
+document.getElementById('filter-type').addEventListener('change', filterVocabList);
+document.getElementById('filter-category').addEventListener('change', filterVocabList);
+document.getElementById('filter-mood').addEventListener('change', filterVocabList);
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.dropdown-container')) {
+    document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('show'));
+  }
+});
+
+loadSheetDataSilent();
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ce3bf8290e1fcfb',t:'MTc3MTE0NzQyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
