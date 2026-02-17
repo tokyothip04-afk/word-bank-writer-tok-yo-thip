@@ -1222,37 +1222,38 @@ ${filledFields}
 "แสดงออกทาง":""
 }`;
 
-  try {
+  const result = await callGeminiWithFallback(prompt, 'autofill');
 
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({
-        action: 'ai',
-        prompt: prompt
-      })
-    });
+  if (result.success) {
 
-    const text = await resp.text();
+    updateModelStatus(result.model);
+
     let jsonObj = null;
+    const match = result.text.match(/\{[\s\S]*\}/);
 
-    try { jsonObj = JSON.parse(text); }
-    catch(e){ console.log("AI parse error", text); }
+    if (match) {
+      try {
+        jsonObj = JSON.parse(match[0]);
+      } catch(e) {}
+    }
 
     if (jsonObj) {
       currentEditAiSuggestions = jsonObj;
       showEditAiSuggestions(jsonObj);
+      showToast('✨ AI เติมครบทุกช่อง', 'info');
     } else {
-      showToast('❌ ไม่สามารถอ่าน JSON จาก AI', 'error');
+      showToast('❌ ไม่สามารถแยก JSON จาก AI', 'error');
     }
 
-  } catch (err) {
-    showToast('❌ เรียก AI ไม่สำเร็จ', 'error');
+  } else {
+    updateModelStatus('Error');
+    showToast(`❌ ${result.error?.message || 'เรียก AI ไม่สำเร็จ'}`, 'error');
   }
 
   btn.disabled = false;
   btn.innerHTML = '✨ AI เติมครบ';
 }
+
 
    function showEditAiSuggestions(suggestions) {
 
