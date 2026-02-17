@@ -339,9 +339,39 @@
   </div>
 
   <!-- AI Suggestion Area วางตรงนี้ -->
-  <div id="edit-ai-suggestion-area" class="hidden mt-4">
-    ...
+ <div id="edit-ai-suggestion-area" class="hidden mt-4">
+  <div class="ai-suggestion">
+    
+    <div class="flex items-center gap-2 mb-3">
+      <span class="ai-badge">✨ AI</span>
+      <span class="text-sm font-medium" style="color:#fbbf24;">
+        ข้อเสนอแนะจาก AI
+      </span>
+    </div>
+
+    <div id="edit-ai-suggestions-content"
+         class="space-y-2 text-sm max-h-60 overflow-y-auto">
+    </div>
+
+    <div class="flex gap-2 mt-4">
+      <button type="button"
+        onclick="applyEditAiSuggestions()"
+        class="px-4 py-2 rounded-lg text-sm font-semibold"
+        style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#0f172a;">
+        ✅ ใช้ข้อมูลนี้
+      </button>
+
+      <button type="button"
+        onclick="dismissEditAiSuggestions()"
+        class="px-4 py-2 rounded-lg text-sm"
+        style="background:rgba(255,255,255,0.1);color:#94a3b8;">
+        ❌ ยกเลิก
+      </button>
+    </div>
+
   </div>
+</div>
+
 
   <div class="flex flex-wrap gap-2 mt-5">
     <button type="button" onclick="requestEditAiHelp()" id="btn-edit-ai"
