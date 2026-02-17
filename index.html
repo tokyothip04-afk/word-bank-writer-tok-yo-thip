@@ -296,50 +296,74 @@
      <div class="flex items-center justify-between mb-4">
       <h3 class="serif-font text-lg font-bold" style="color: #f59e0b;">✏️ แก้ไขคำศัพท์</h3><button type="button" onclick="closeEditModal()" class="text-xl" style="color: #64748b;">✕</button>
      </div>
-     <form id="edit-form" onsubmit="handleEditSubmit(event)" autocomplete="off"><input type="hidden" id="edit-row-index">
-     <div id="edit-ai-suggestion-area" class="hidden mt-4">
-  <div class="ai-suggestion">
-    <div class="flex items-center gap-2 mb-3">
-      <span class="ai-badge">✨ AI</span>
-      <span class="text-sm font-medium" style="color:#fbbf24;">
-        AI แนะนำการแก้ไข
-      </span>
+     <form id="edit-form" onsubmit="handleEditSubmit(event)" autocomplete="off">
+  <input type="hidden" id="edit-row-index">
+
+  <div class="space-y-4">
+
+    <div>
+      <label class="block text-sm mb-1">ประเภท</label>
+      <input type="text" id="edit-type" class="input-field">
     </div>
 
-    <div id="edit-ai-suggestions-content"
-         class="space-y-2 text-sm max-h-72 overflow-y-auto"></div>
-
-    <div class="flex gap-2 mt-4 flex-wrap">
-      <button type="button"
-              onclick="applyEditAiSuggestions()"
-              class="px-4 py-2 rounded-lg text-sm font-semibold"
-              style="background:linear-gradient(135deg,#f59e0b,#d97706);
-                     color:#0f172a;">
-        ✅ ใช้ครบทั้งหมด
-      </button>
-
-      <button type="button"
-              onclick="dismissEditAiSuggestions()"
-              class="px-4 py-2 rounded-lg text-sm"
-              style="background:rgba(255,255,255,0.1);
-                     color:#94a3b8;">
-        ❌ ยกเลิก
-      </button>
+    <div>
+      <label class="block text-sm mb-1">หมวดหลัก</label>
+      <input type="text" id="edit-category" class="input-field">
     </div>
+
+    <div>
+      <label class="block text-sm mb-1">คำ / ประโยค</label>
+      <input type="text" id="edit-word" class="input-field">
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">ความหมาย</label>
+      <textarea id="edit-meaning" class="input-field" rows="2"></textarea>
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">กริยา</label>
+      <input type="text" id="edit-verb" class="input-field">
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">อารมณ์</label>
+      <input type="text" id="edit-mood" class="input-field">
+    </div>
+
+    <div>
+      <label class="block text-sm mb-1">แสดงออกทาง</label>
+      <input type="text" id="edit-expression" class="input-field">
+    </div>
+
   </div>
-</div>
 
-     <div class="flex flex-wrap gap-2 mt-5">
-  <button type="button"
-    onclick="requestEditAiHelp()"
-    id="btn-edit-ai"
-    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
-    style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(20,184,166,0.2));
-           color: #fbbf24; border: 1px solid rgba(245,158,11,0.3);">
-    ✨ AI เติมครบ
-  </button>
+  <!-- AI Suggestion Area วางตรงนี้ -->
+  <div id="edit-ai-suggestion-area" class="hidden mt-4">
+    ...
+  </div>
 
-     </form>
+  <div class="flex flex-wrap gap-2 mt-5">
+    <button type="button" onclick="requestEditAiHelp()" id="btn-edit-ai"
+      class="px-5 py-2 rounded-xl text-sm font-semibold"
+      style="background: rgba(245,158,11,0.2); color: #fbbf24;">
+      ✨ AI เติมครบ
+    </button>
+
+    <button type="submit" id="btn-edit-save"
+      class="px-5 py-2 rounded-xl text-sm font-bold"
+      style="background: linear-gradient(135deg,#f59e0b,#d97706); color:#0f172a;">
+      บันทึก
+    </button>
+
+    <button type="button" onclick="closeEditModal()"
+      class="px-5 py-2 rounded-xl text-sm"
+      style="background: rgba(255,255,255,0.05); color:#64748b;">
+      ยกเลิก
+    </button>
+  </div>
+</form>
+
     </div>
    </div>
    <div id="delete-modal" class="modal-overlay hidden">
