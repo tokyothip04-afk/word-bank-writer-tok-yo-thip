@@ -336,6 +336,7 @@
   <script>
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjc3n6fVpSRQvHjck2C3fRbuFS51bxOPW8bBZ3GFoSOIm9LUvNE-J92LFBwH41zmuc/exec';
 
+
 const MODELS = {
   autofill: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.0-flash', 'gemini-2.0-flash-001', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-lite-001']
 };
@@ -347,10 +348,6 @@ let expressionTags = [];
 let currentAiSuggestions = {};
 let pendingDeleteIndex = null;
 let lastAiCallTime = 0;
-
-function getModelUrl(modelName) {
-  return `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
-}
 
 function rotateModel(category) {
   const models = MODELS[category];
@@ -371,56 +368,37 @@ function getCurrentModel(category) {
 async function callGeminiWithFallback(prompt, category, maxRetries = 3) {
   let lastError = null;
   let modelUsed = '';
-  
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const model = getCurrentModel(category);
       if (!model) throw new Error('ไม่พบโมเดล');
-      
+
       modelUsed = model;
-      const url = getModelUrl(model);
-      console.log(`📡 Attempt ${attempt + 1}/${maxRetries} - Model: ${model}`);
-      
-      const resp = await fetch(url, {
+
+      const resp = await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.5, maxOutputTokens: 1500 }
+          action: 'gemini',
+          model: model,
+          prompt: prompt
         })
       });
 
-      if (resp.status === 429) {
-        console.warn(`⚠️ Rate limit on ${model}, rotating...`);
-        lastError = new Error('Rate Limit');
-        rotateModel(category);
-        continue;
-      }
-
-      if (!resp.ok) {
-        console.warn(`⚠️ HTTP Error ${resp.status}, rotating...`);
-        lastError = new Error(`HTTP ${resp.status}`);
-        rotateModel(category);
-        continue;
-      }
-
       const data = await resp.json();
-      if (data.error) {
-        console.warn(`⚠️ API error: ${data.error.message}, rotating...`);
-        lastError = new Error(data.error.message || 'API Error');
+
+      if (!data.success) {
         rotateModel(category);
+        lastError = new Error(data.error || 'API Error');
         continue;
       }
 
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      return { success: true, text, model: modelUsed };
+      return { success: true, text: data.text, model: modelUsed };
 
     } catch (err) {
       lastError = err;
-      console.warn(`⚠️ Attempt ${attempt + 1} error:`, err.message);
-      if (attempt < maxRetries - 1) {
-        rotateModel(category);
-      }
+      rotateModel(category);
     }
   }
 
@@ -961,42 +939,38 @@ Response: เติมทุกช่องที่ว่างเปล่า 
 "แสดงออกทาง": "value1 value2 value3"
 }`;
 
-
-try {
-
-  const resp = await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({
-      action: 'ai',
-      prompt: prompt
-    })
-  });
-
-  const text = await resp.text();   // 👈 ใช้ text ดีกว่า
-  let jsonObj = null;
-
-  try {
-    jsonObj = JSON.parse(text);
-  } catch (e) {
-    console.log("JSON parse failed", text);
-  }
-
-  if (jsonObj && Object.keys(jsonObj).length > 0) {
-    currentAiSuggestions = jsonObj;
-    showAiSuggestions(currentAiSuggestions, currentData);
-    showToast('✨ AI เติมครบทุกช่องให้คุณ', 'info');
+  btn.innerHTML = '<span class="spinner"></span> AI...';
+  const result = await callGeminiWithFallback(prompt, 'autofill');
+  
+  if (result.success) {
+    updateModelStatus(result.model);
+    let jsonObj = null;
+    
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        jsonObj = JSON.parse(jsonMatch[0]);
+        console.log('✅ JSON parsed:', jsonObj);
+      } catch (e) {
+        console.log('JSON parse failed');
+      }
+    }
+    
+    if (jsonObj && Object.keys(jsonObj).length > 0) {
+      currentAiSuggestions = jsonObj;
+      showAiSuggestions(currentAiSuggestions, currentData);
+      showToast('✨ AI เติมครบทุกช่องให้คุณ', 'info');
+    } else {
+      console.log('Full response:', result.text);
+      showToast('❌ ไม่สามารถแยก JSON', 'error');
+    }
   } else {
-    showToast('❌ ไม่สามารถแยก JSON', 'error');
+    updateModelStatus('Error');
+    showToast(`❌ ${result.error?.message || 'ไม่สามารถเรียก AI'}`, 'error');
   }
 
-} catch (err) {
-  showToast('❌ เรียก AI ไม่สำเร็จ: ' + err.message, 'error');
-}
-
-btn.disabled = false;
-btn.innerHTML = '<span>✨</span> AI เติมครบ';
-
+  btn.disabled = false;
+  btn.innerHTML = '<span>✨</span> AI เติมครบ';
 }
 
 function showAiSuggestions(suggestions, currentData) {
