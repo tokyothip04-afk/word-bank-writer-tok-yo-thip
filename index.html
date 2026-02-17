@@ -297,24 +297,48 @@
       <h3 class="serif-font text-lg font-bold" style="color: #f59e0b;">✏️ แก้ไขคำศัพท์</h3><button type="button" onclick="closeEditModal()" class="text-xl" style="color: #64748b;">✕</button>
      </div>
      <form id="edit-form" onsubmit="handleEditSubmit(event)" autocomplete="off"><input type="hidden" id="edit-row-index">
-      <div class="space-y-4">
-       <div><label for="edit-type" class="block text-sm font-medium mb-1" style="color: #94a3b8;">ประเภท</label> <select id="edit-type" class="input-field"> <option value="">-- เลือกประเภท --</option> <option value="คำนาม">คำนาม</option> <option value="คำกริยา">คำกริยา</option> <option value="คำวิเศษณ์">คำวิเศษณ์</option> <option value="คำบุพบท">คำบุพบท</option> <option value="คำสันธาน">คำสันธาน</option> <option value="คำอุทาน">คำอุทาน</option> <option value="สำนวน">สำนวน</option> <option value="ประโยค">ประโยค</option> <option value="วลี">วลี</option> <option value="อื่นๆ">อื่นๆ</option> </select>
-       </div>
-       <div><label for="edit-category" class="block text-sm font-medium mb-1" style="color: #94a3b8;">หมวดหลัก</label> <input type="text" id="edit-category" class="input-field">
-       </div>
-       <div><label for="edit-word" class="block text-sm font-medium mb-1" style="color: #94a3b8;">คำ / ประโยค</label> <input type="text" id="edit-word" class="input-field">
-       </div>
-       <div><label for="edit-meaning" class="block text-sm font-medium mb-1" style="color: #94a3b8;">ความหมาย</label> <textarea id="edit-meaning" class="input-field" rows="2"></textarea>
-       </div>
-       <div><label for="edit-verb" class="block text-sm font-medium mb-1" style="color: #94a3b8;">กริยา</label> <input type="text" id="edit-verb" class="input-field">
-       </div>
-       <div><label for="edit-mood" class="block text-sm font-medium mb-1" style="color: #94a3b8;">อารมณ์ (คั่นด้วยช่องว่าง)</label> <input type="text" id="edit-mood" class="input-field">
-       </div>
-       <div><label for="edit-expression" class="block text-sm font-medium mb-1" style="color: #94a3b8;">แสดงออกทาง (คั่นด้วยช่องว่าง)</label> <input type="text" id="edit-expression" class="input-field">
-       </div>
-      </div>
-      <div class="flex gap-2 mt-5"><button type="submit" id="btn-edit-save" class="px-5 py-2 rounded-xl text-sm font-bold" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #0f172a;">บันทึก</button> <button type="button" onclick="closeEditModal()" class="px-5 py-2 rounded-xl text-sm font-medium" style="background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1);">ยกเลิก</button>
-      </div>
+     <div id="edit-ai-suggestion-area" class="hidden mt-4">
+  <div class="ai-suggestion">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="ai-badge">✨ AI</span>
+      <span class="text-sm font-medium" style="color:#fbbf24;">
+        AI แนะนำการแก้ไข
+      </span>
+    </div>
+
+    <div id="edit-ai-suggestions-content"
+         class="space-y-2 text-sm max-h-72 overflow-y-auto"></div>
+
+    <div class="flex gap-2 mt-4 flex-wrap">
+      <button type="button"
+              onclick="applyEditAiSuggestions()"
+              class="px-4 py-2 rounded-lg text-sm font-semibold"
+              style="background:linear-gradient(135deg,#f59e0b,#d97706);
+                     color:#0f172a;">
+        ✅ ใช้ครบทั้งหมด
+      </button>
+
+      <button type="button"
+              onclick="dismissEditAiSuggestions()"
+              class="px-4 py-2 rounded-lg text-sm"
+              style="background:rgba(255,255,255,0.1);
+                     color:#94a3b8;">
+        ❌ ยกเลิก
+      </button>
+    </div>
+  </div>
+</div>
+
+     <div class="flex flex-wrap gap-2 mt-5">
+  <button type="button"
+    onclick="requestEditAiHelp()"
+    id="btn-edit-ai"
+    class="px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2"
+    style="background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(20,184,166,0.2));
+           color: #fbbf24; border: 1px solid rgba(245,158,11,0.3);">
+    ✨ AI เติมครบ
+  </button>
+
      </form>
     </div>
    </div>
@@ -1136,8 +1160,118 @@ document.addEventListener('click', function(e) {
     document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('show'));
   }
 });
+   let currentEditAiSuggestions = {};
+async function requestEditAiHelp() {
+
+  const btn = document.getElementById('btn-edit-ai');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> AI...';
+
+  const currentData = {
+    'ประเภท': document.getElementById('edit-type').value,
+    'หมวดหลัก': document.getElementById('edit-category').value.trim(),
+    'ความหมาย': document.getElementById('edit-meaning').value.trim(),
+    'คำ/ประโยค': document.getElementById('edit-word').value.trim(),
+    'กริยา': document.getElementById('edit-verb').value.trim(),
+    'อารมณ์': document.getElementById('edit-mood').value.trim(),
+    'แสดงออกทาง': document.getElementById('edit-expression').value.trim()
+  };
+
+  const filledFields = Object.entries(currentData)
+    .filter(([,v]) => v)
+    .map(([k,v]) => `${k}: "${v}"`)
+    .join('\n') || '(ไม่มี)';
+
+  const prompt = `Return ONLY valid JSON.
+เติมข้อมูลให้ครบทุกช่อง
+
+ข้อมูลที่มี:
+${filledFields}
+
+{
+"ประเภท":"",
+"หมวดหลัก":"",
+"ความหมาย":"",
+"คำ/ประโยค":"",
+"กริยา":"",
+"อารมณ์":"",
+"แสดงออกทาง":""
+}`;
+
+  try {
+
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'ai',
+        prompt: prompt
+      })
+    });
+
+    const text = await resp.text();
+    let jsonObj = null;
+
+    try { jsonObj = JSON.parse(text); }
+    catch(e){ console.log("AI parse error", text); }
+
+    if (jsonObj) {
+      currentEditAiSuggestions = jsonObj;
+      showEditAiSuggestions(jsonObj);
+    } else {
+      showToast('❌ ไม่สามารถอ่าน JSON จาก AI', 'error');
+    }
+
+  } catch (err) {
+    showToast('❌ เรียก AI ไม่สำเร็จ', 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '✨ AI เติมครบ';
+}
+
+   function showEditAiSuggestions(suggestions) {
+
+  const area = document.getElementById('edit-ai-suggestion-area');
+  const content = document.getElementById('edit-ai-suggestions-content');
+
+  let html = '';
+
+  for (const field in suggestions) {
+    html += `
+      <div class="field-group">
+        <span class="label">${field}</span>
+        <span class="value">${suggestions[field]}</span>
+      </div>
+    `;
+  }
+
+  content.innerHTML = html;
+  area.classList.remove('hidden');
+}
+function applyEditAiSuggestions() {
+
+  const s = currentEditAiSuggestions;
+  if (!s) return;
+
+  if (s['ประเภท']) document.getElementById('edit-type').value = s['ประเภท'];
+  if (s['หมวดหลัก']) document.getElementById('edit-category').value = s['หมวดหลัก'];
+  if (s['ความหมาย']) document.getElementById('edit-meaning').value = s['ความหมาย'];
+  if (s['คำ/ประโยค']) document.getElementById('edit-word').value = s['คำ/ประโยค'];
+  if (s['กริยา']) document.getElementById('edit-verb').value = s['กริยา'];
+  if (s['อารมณ์']) document.getElementById('edit-mood').value = s['อารมณ์'];
+  if (s['แสดงออกทาง']) document.getElementById('edit-expression').value = s['แสดงออกทาง'];
+
+  dismissEditAiSuggestions();
+  showToast('✅ เติมข้อมูลเรียบร้อย', 'success');
+}
+function dismissEditAiSuggestions() {
+  document.getElementById('edit-ai-suggestion-area').classList.add('hidden');
+  currentEditAiSuggestions = {};
+}
 
 loadSheetDataSilent();
 </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ce3bf8290e1fcfb',t:'MTc3MTE0NzQyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
+
