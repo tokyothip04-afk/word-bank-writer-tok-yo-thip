@@ -219,7 +219,9 @@
        </svg> เพิ่มคำศัพท์ใหม่</h2>
       <form id="vocab-form" onsubmit="handleFormSubmit(event)" autocomplete="off">
        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <div><label for="field-type" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">ประเภท</label> <select id="field-type" class="input-field" style="cursor:pointer;"> <option value="">-- เลือกประเภท --</option> <option value="คำนาม">คำนาม</option> <option value="คำกริยา">คำกริยา</option> <option value="คำวิเศษณ์">คำวิเศษณ์</option> <option value="คำบุพบท">คำบุพบท</option> <option value="คำสันธาน">คำสันธาน</option> <option value="คำอุทาน">คำอุทาน</option> <option value="สำนวน">สำนวน</option> <option value="ประโยค">ประโยค</option> <option value="วลี">วลี</option> <option value="อื่นๆ">อื่นๆ</option> </select>
+        <div><label for="field-type" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">ประเภท</label> <select id="field-type" class="input-field" style="cursor:pointer;">
+  <option value="">-- เลือกประเภท --</option>
+</select>
         </div>
         <div class="dropdown-container"><label for="field-category" class="block text-sm font-medium mb-1.5" style="color: #94a3b8;">หมวดหลัก</label> <input type="text" id="field-category" class="input-field" placeholder="พิมพ์เพื่อค้นหา..." oninput="handleAutoComplete(event, 'category')">
          <div id="category-dropdown" class="autocomplete-dropdown"></div>
@@ -660,6 +662,7 @@ async function loadSheetData() {
       allVocabData = result.data;
       updateWordCount(allVocabData.length);
       populateFilters();
+      populateTypeDropdown();
       filterVocabList();
     } else {
       showToast('ไม่สามารถโหลดข้อมูลได้', 'error');
@@ -787,6 +790,30 @@ function renderVocabList(data) {
   container.innerHTML = '';
   container.appendChild(fragment);
 }
+
+ function populateTypeDropdown() {
+  const select = document.getElementById('field-type');
+  const types = new Set();
+
+  allVocabData.forEach(row => {
+    if (row['ประเภท']) {
+      types.add(row['ประเภท'].trim());
+    }
+  });
+
+  // ล้าง option เดิม (ยกเว้นตัวแรก)
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+
+  [...types].sort().forEach(type => {
+    const opt = document.createElement('option');
+    opt.value = type;
+    opt.textContent = type;
+    select.appendChild(opt);
+  });
+}
+
 
 function handleAutoComplete(event, fieldType) {
   const input = event.target;
@@ -967,6 +994,7 @@ async function loadSheetDataSilent() {
     const resp = await fetch(`${APPS_SCRIPT_URL}?action=getAll`);
     const result = await resp.json();
     if (result.status === 'success') allVocabData = result.data;
+    populateTypeDropdown();
   } catch (e) {}
 }
 
