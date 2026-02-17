@@ -961,45 +961,46 @@ Response: เติมทุกช่องที่ว่างเปล่า 
 "แสดงออกทาง": "value1 value2 value3"
 }`;
 
-  btn.innerHTML = '<span class="spinner"></span> AI...';
-  await fetch(APPS_SCRIPT_URL, {
-  method: 'POST',
-  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-  body: JSON.stringify({
-    action: 'ai',
-    prompt: prompt
-  })
-});
-  
-  if (result.success) {
-    updateModelStatus(result.model);
-    let jsonObj = null;
-    
-    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      try {
-        jsonObj = JSON.parse(jsonMatch[0]);
-        console.log('✅ JSON parsed:', jsonObj);
-      } catch (e) {
-        console.log('JSON parse failed');
-      }
+
+try {
+
+  const resp = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      action: 'ai',
+      prompt: prompt
+    })
+  });
+
+  const result = await resp.json();   // 👈 สำคัญมาก
+
+  let jsonObj = null;
+
+  const jsonMatch = JSON.stringify(result).match(/\{[\s\S]*\}/);
+
+  if (jsonMatch) {
+    try {
+      jsonObj = JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      console.log('JSON parse failed');
     }
-    
-    if (jsonObj && Object.keys(jsonObj).length > 0) {
-      currentAiSuggestions = jsonObj;
-      showAiSuggestions(currentAiSuggestions, currentData);
-      showToast('✨ AI เติมครบทุกช่องให้คุณ', 'info');
-    } else {
-      console.log('Full response:', result.text);
-      showToast('❌ ไม่สามารถแยก JSON', 'error');
-    }
-  } else {
-    updateModelStatus('Error');
-    showToast(`❌ ${result.error?.message || 'ไม่สามารถเรียก AI'}`, 'error');
   }
 
-  btn.disabled = false;
-  btn.innerHTML = '<span>✨</span> AI เติมครบ';
+  if (jsonObj && Object.keys(jsonObj).length > 0) {
+    currentAiSuggestions = jsonObj;
+    showAiSuggestions(currentAiSuggestions, currentData);
+    showToast('✨ AI เติมครบทุกช่องให้คุณ', 'info');
+  } else {
+    showToast('❌ ไม่สามารถแยก JSON', 'error');
+  }
+
+} catch (err) {
+  showToast('❌ เรียก AI ไม่สำเร็จ: ' + err.message, 'error');
+}
+
+btn.disabled = false;
+btn.innerHTML = '<span>✨</span> AI เติมครบ';
 }
 
 function showAiSuggestions(suggestions, currentData) {
