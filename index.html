@@ -1001,6 +1001,39 @@ try {
 
 btn.disabled = false;
 btn.innerHTML = '<span>✨</span> AI เติมครบ';
+ 
+  if (result.success) {
+    updateModelStatus(result.model);
+    let jsonObj = null;
+    
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        jsonObj = JSON.parse(jsonMatch[0]);
+        console.log('✅ JSON parsed:', jsonObj);
+      } catch (e) {
+        console.log('JSON parse failed');
+      }
+    }
+    
+    if (jsonObj && Object.keys(jsonObj).length > 0) {
+      currentAiSuggestions = jsonObj;
+      showAiSuggestions(currentAiSuggestions, currentData);
+      showToast('✨ AI เติมครบทุกช่องให้คุณ', 'info');
+    } else {
+      console.log('Full response:', result.text);
+      showToast('❌ ไม่สามารถแยก JSON', 'error');
+    }
+  } else {
+    updateModelStatus('Error');
+    showToast(`❌ ${result.error?.message || 'ไม่สามารถเรียก AI'}`, 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>✨</span> AI เติมครบ';
+}
+
+ 
 }
 
 function showAiSuggestions(suggestions, currentData) {
